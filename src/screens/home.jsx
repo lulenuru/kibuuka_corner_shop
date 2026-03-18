@@ -36,7 +36,7 @@ export default function HomeScreen({ onNavigate, onLogout }) {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">Good morning 👋</p>
-                <h1 className="text-white text-xl font-extrabold mt-1">Lule Nuru</h1>
+                <h1 className="text-white text-xl font-extrabold mt-1">Kibuuka</h1>
               </div>
               <div className="flex gap-2">
                 <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white">
@@ -53,7 +53,7 @@ export default function HomeScreen({ onNavigate, onLogout }) {
             <div className="grid grid-cols-3 gap-2">
               {[
                 { label: "Revenue", val: "UGX 284K" },
-                { label: "Sales",   val: "47 today"  },
+                { label: "Expenses",   val: "UGX 47K"  },
                 { label: "Credit",  val: "UGX 187K"  },
               ].map(({ label, val }) => (
                 <div key={label} className="bg-white/10 border border-white/12 rounded-xl px-3 py-2.5">
