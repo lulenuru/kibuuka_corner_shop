@@ -5,6 +5,7 @@ import SalesScreen    from "./screens/sales";
 import InventoryScreen from "./screens/inventory";
 import CreditScreen   from "./screens/credit_management";
 import ReportsScreen  from "./screens/reports";
+import ExpensesScreen from "./screens/expenses";
 import StaffScreen    from "./screens/staff";
 import RestockHistoryScreen from "./screens/restock_history";
 import KaMoneyScreen from "./screens/ka_money";
@@ -27,6 +28,7 @@ export default function App() {
     case "inventory": return <InventoryScreen onBack={goBack} />;
     case "credit":    return <CreditScreen    onBack={goBack} />;
     case "reports":   return <ReportsScreen   onBack={goBack} />;
+    case "expenses":  return <ExpensesScreen  onBack={goBack} />;
     case "staff":     return <StaffScreen     onBack={goBack} />;
     case "ka_money":   return <KaMoneyScreen   onBack={goBack} />;
     case "restock": return <RestockHistoryScreen onBack={goBack} />;
