@@ -1,7 +1,7 @@
 import {
   ShoppingCart, Package, CreditCard, BarChart2,
   UserCheck, TrendingUp, Bell, LogOut,
-  ChevronRight, AlertTriangle, DollarSign,
+  ChevronRight, AlertTriangle, DollarSign, PiggyBank,
 } from "lucide-react";
 
 const FEATURES = [
@@ -9,6 +9,7 @@ const FEATURES = [
   { key: "expenses",  icon: DollarSign,   label: "Record Expense",  sub: "Track costs like restock, transport", iconColor: "text-purple-500", iconBg: "bg-purple-50", badge: "Add now" },
   { key: "inventory", icon: Package,      label: "Inventory",       sub: "Track stock levels",        iconColor: "text-blue-500",    iconBg: "bg-blue-50",     badge: "3 low stock"     },
   { key: "credit",    icon: CreditCard,   label: "Credit",          sub: "Customer debt tracking",    iconColor: "text-amber-500",   iconBg: "bg-amber-50",    badge: "UGX 187K owed"   },
+  { key: "ka_money",  icon: PiggyBank,    label: "Ka Money",        sub: "Earn UGX 500 per MM txn",   iconColor: "text-purple-500", iconBg: "bg-purple-50", badge: "Redeem after 10" },
   { key: "reports",   icon: BarChart2,    label: "Reports",         sub: "Sales & performance",       iconColor: "text-slate-600",   iconBg: "bg-slate-100",   badge: "View insights"   },
   { key: "restock",   icon: TrendingUp,   label: "Restock History", sub: "Past stock additions",      iconColor: "text-teal-500",    iconBg: "bg-teal-50",     badge: "2 days ago"      },
   { key: "staff",     icon: UserCheck,    label: "Staff",           sub: "Manage your team",          iconColor: "text-sky-500",     iconBg: "bg-sky-50",      badge: "3 members"       },
@@ -74,7 +75,7 @@ export default function HomeScreen({ onNavigate, onLogout }) {
             {FEATURES.map(({ key, icon: Icon, label, sub, iconColor, iconBg, badge }) => (
               <button
                 key={key}
-                onClick={() => onNavigate && onNavigate(key)}
+                onClick={() => { onNavigate && onNavigate(key)}}
                 className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 text-left active:scale-95 hover:border-emerald-300 hover:shadow-sm transition-all duration-150"
               >
                 <div className="flex items-center justify-between">
