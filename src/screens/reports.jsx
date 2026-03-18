@@ -1,4 +1,4 @@
-import { ArrowLeft, Bell, TrendingUp, TrendingDown, ShoppingCart, CreditCard, Package, BarChart2 } from "lucide-react";
+import { ArrowLeft, Bell, TrendingUp, TrendingDown, ShoppingCart, CreditCard, Package, BarChart2, DollarSign } from "lucide-react";
 
 const TOP_PRODUCTS = [
   { name: "Cooking Oil 2L", sales: 18, revenue: 252000, pct: 90 },
@@ -15,6 +15,26 @@ const DAILY = [
   { day: "Fri", sales: 284000 },
 ];
 const maxSales = Math.max(...DAILY.map(d => d.sales));
+
+// New: Sample expenses data (replace with real data from your backend)
+const EXPENSES = [
+  { category: "Wholesaler Restock", amount: 150000 },
+  { category: "Transport", amount: 25000 },
+  { category: "Electricity", amount: 10000 },
+  { category: "Other", amount: 15000 },
+];
+const totalExpenses = EXPENSES.reduce((sum, e) => sum + e.amount, 0);
+
+// New: Daily expenses for comparison (sample data)
+const DAILY_EXPENSES = [
+  { day: "Mon", expenses: 50000 },
+  { day: "Tue", expenses: 30000 },
+  { day: "Wed", expenses: 70000 },
+  { day: "Thu", expenses: 40000 },
+  { day: "Fri", expenses: 60000 },
+];
+const maxExpenses = Math.max(...DAILY_EXPENSES.map(d => d.expenses));
+const maxCombined = Math.max(maxSales, maxExpenses);
 
 function StatCard({ label, value, sub, icon: Icon, bgColor, textColor, iconBg, trend }) {
   return (
@@ -107,12 +127,21 @@ export default function ReportsScreen({ onBack }) {
               textColor="text-red-500"
               iconBg="bg-red-100"
             />
+            {/* New: Expenses stat card */}
+            <StatCard
+              label="Expenses"    value={`UGX ${totalExpenses.toLocaleString()}`}
+              sub="this week"
+              icon={DollarSign}
+              bgColor="bg-purple-50 border-purple-100"
+              textColor="text-purple-600"
+              iconBg="bg-purple-100"
+            />
           </div>
 
-          {/* Bar chart */}
+          {/* Bar chart - Updated to show Revenue vs Expenses */}
           <div className="bg-white border border-slate-200 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-slate-800 text-sm font-bold">Weekly Revenue</p>
+              <p className="text-slate-800 text-sm font-bold">Revenue vs Expenses</p>
               <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1">
                 <BarChart2 size={12} className="text-emerald-500" />
                 <span className="text-emerald-600 text-[11px] font-bold">This Week</span>
@@ -120,20 +149,35 @@ export default function ReportsScreen({ onBack }) {
             </div>
             <div className="flex items-end justify-between gap-2 h-28">
               {DAILY.map((d, i) => {
-                const h = Math.round((d.sales / maxSales) * 100);
+                const revenueH = Math.round((d.sales / maxCombined) * 100);
+                const expenseH = Math.round((DAILY_EXPENSES[i].expenses / maxCombined) * 100);
                 const isToday = i === DAILY.length - 1;
                 return (
                   <div key={d.day} className="flex flex-col items-center gap-1.5 flex-1">
-                    <div className="w-full flex items-end justify-center" style={{ height: 88 }}>
+                    <div className="w-full flex items-end justify-center gap-0.5" style={{ height: 88 }}>
                       <div
-                        className={`w-full rounded-t-lg transition-all ${isToday ? "bg-emerald-400" : "bg-slate-200"}`}
-                        style={{ height: `${h}%` }}
+                        className={`flex-1 rounded-t-lg transition-all ${isToday ? "bg-emerald-400" : "bg-slate-200"}`}
+                        style={{ height: `${revenueH}%` }}
+                      />
+                      <div
+                        className={`flex-1 rounded-t-lg transition-all bg-red-300`}
+                        style={{ height: `${expenseH}%` }}
                       />
                     </div>
                     <span className={`text-[10px] font-bold ${isToday ? "text-emerald-500" : "text-slate-400"}`}>{d.day}</span>
                   </div>
                 );
               })}
+            </div>
+            <div className="flex justify-center gap-4 mt-2">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-slate-200 rounded"></div>
+                <span className="text-xs text-slate-500">Revenue</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-red-300 rounded"></div>
+                <span className="text-xs text-slate-500">Expenses</span>
+              </div>
             </div>
           </div>
 
@@ -156,6 +200,23 @@ export default function ReportsScreen({ onBack }) {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* New: Expenses breakdown */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+            <p className="text-slate-800 text-sm font-bold mb-4">Expenses Breakdown</p>
+            <div className="flex flex-col gap-4">
+              {EXPENSES.map((e, i) => (
+                <div key={e.category} className="flex items-center justify-between">
+                  <span className="text-slate-700 text-sm font-medium">{e.category}</span>
+                  <span className="text-red-600 text-xs font-bold">UGX {e.amount.toLocaleString()}</span>
+                </div>
+              ))}
+              <div className="border-t pt-2 flex items-center justify-between">
+                <span className="text-slate-800 text-sm font-bold">Total</span>
+                <span className="text-red-600 text-sm font-bold">UGX {totalExpenses.toLocaleString()}</span>
+              </div>
             </div>
           </div>
 

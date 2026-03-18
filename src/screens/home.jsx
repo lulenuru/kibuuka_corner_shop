@@ -1,16 +1,17 @@
 import {
   ShoppingCart, Package, CreditCard, BarChart2,
   UserCheck, TrendingUp, Bell, LogOut,
-  ChevronRight, AlertTriangle,
+  ChevronRight, AlertTriangle, DollarSign,
 } from "lucide-react";
 
 const FEATURES = [
   { key: "sales",     icon: ShoppingCart, label: "Record Sale",     sub: "Add products & checkout",   iconColor: "text-emerald-500", iconBg: "bg-emerald-50",  badge: "47 today"        },
+  { key: "expenses",  icon: DollarSign,   label: "Record Expense",  sub: "Track costs like restock, transport", iconColor: "text-purple-500", iconBg: "bg-purple-50", badge: "Add now" },
   { key: "inventory", icon: Package,      label: "Inventory",       sub: "Track stock levels",        iconColor: "text-blue-500",    iconBg: "bg-blue-50",     badge: "3 low stock"     },
   { key: "credit",    icon: CreditCard,   label: "Credit",          sub: "Customer debt tracking",    iconColor: "text-amber-500",   iconBg: "bg-amber-50",    badge: "UGX 187K owed"   },
   { key: "reports",   icon: BarChart2,    label: "Reports",         sub: "Sales & performance",       iconColor: "text-slate-600",   iconBg: "bg-slate-100",   badge: "View insights"   },
-  { key: "staff",     icon: UserCheck,    label: "Staff",           sub: "Manage your team",          iconColor: "text-sky-500",     iconBg: "bg-sky-50",      badge: "3 members"       },
   { key: "restock",   icon: TrendingUp,   label: "Restock History", sub: "Past stock additions",      iconColor: "text-teal-500",    iconBg: "bg-teal-50",     badge: "2 days ago"      },
+  { key: "staff",     icon: UserCheck,    label: "Staff",           sub: "Manage your team",          iconColor: "text-sky-500",     iconBg: "bg-sky-50",      badge: "3 members"       },
 ];
 
 const LOW_STOCK = [
@@ -34,7 +35,7 @@ export default function HomeScreen({ onNavigate, onLogout }) {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">Good morning 👋</p>
-                <h1 className="text-white text-xl font-extrabold mt-1">Namukasa Rita</h1>
+                <h1 className="text-white text-xl font-extrabold mt-1">Lule Nuru</h1>
               </div>
               <div className="flex gap-2">
                 <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white">

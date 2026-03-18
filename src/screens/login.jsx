@@ -34,15 +34,15 @@ export default function LoginScreen({ onLogin }) {
             Welcome back
           </h1>
           <p className="relative z-10 text-slate-400 text-sm leading-relaxed mb-6">
-            Sign in to manage your shop
+            Sign in to manage your Kaduuka
           </p>
 
           {/* trust badges */}
           <div className="relative z-10 flex gap-2 flex-wrap">
             {[
-              { icon: Shield,       label: "Secure"   },
-              { icon: Zap,          label: "Fast"     },
-              { icon: CheckCircle,  label: "Reliable" },
+              { icon: Shield,       label: "Sales"   },
+              { icon: Zap,          label: "Inventory"     },
+              { icon: CheckCircle,  label: "Credit" },
             ].map(({ icon: Icon, label }) => (
               <span key={label} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/15 border border-emerald-400/25 text-emerald-300 text-xs font-semibold">
                 <Icon size={10} />
