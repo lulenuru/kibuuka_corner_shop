@@ -59,15 +59,14 @@ export default function KaMoneyScreen({ onBack }) {
 
         <header className="relative overflow-hidden bg-gradient-to-br from-slate-800 to-blue-900 px-5 pt-14 pb-5">
           <div className="absolute -top-14 -right-10 w-44 h-44 rounded-full bg-emerald-400/10 blur-2xl pointer-events-none" />
-          <div className="relative z-10 flex items-center justify-between">
+          <div className="relative z-10 flex items-center gap-3">
             <button
               onClick={onBack}
               className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors"
             >
               <ArrowLeft size={18} />
             </button>
-
-            <div className="text-right">
+            <div>
               <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Ka Money</p>
               <h1 className="text-white text-xl font-extrabold mt-0.5 flex items-center gap-2">
                 <PiggyBank size={18} />

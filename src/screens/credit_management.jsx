@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Bell, Plus, User, Clock, ChevronRight, CreditCard, X } from "lucide-react";
 
-const CUSTOMERS = [
+const INITIAL_CUSTOMERS = [
   { id: 1, name: "Nakato Sarah",    phone: "0772 123 456", balance: 45000,  purchases: 3, overdue: true  },
   { id: 2, name: "Ssemakula John",  phone: "0701 987 654", balance: 120000, purchases: 7, overdue: false },
   { id: 3, name: "Apio Grace",      phone: "0782 456 789", balance: 22500,  purchases: 2, overdue: true  },
@@ -9,9 +9,38 @@ const CUSTOMERS = [
 ];
 
 export default function CreditScreen({ onBack }) {
-  const [modal, setModal]     = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [modal, setModal] = useState(false);
   const [selected, setSelected] = useState(null);
-  const totalOwed = CUSTOMERS.reduce((s, c) => s + c.balance, 0);
+  const [paymentAmount, setPaymentAmount] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("customers");
+    if (saved) {
+      setCustomers(JSON.parse(saved));
+    } else {
+      setCustomers(INITIAL_CUSTOMERS);
+    }
+  }, []);
+
+  const saveCustomers = (newCustomers) => {
+    setCustomers(newCustomers);
+    localStorage.setItem("customers", JSON.stringify(newCustomers));
+  };
+
+  const handlePayment = () => {
+    const amount = parseFloat(paymentAmount);
+    if (amount > 0 && selected) {
+      const updatedCustomers = customers.map(c =>
+        c.id === selected.id ? { ...c, balance: Math.max(0, c.balance - amount) } : c
+      );
+      saveCustomers(updatedCustomers);
+      setSelected(null);
+      setPaymentAmount("");
+    }
+  };
+
+  const totalOwed = customers.reduce((s, c) => s + c.balance, 0);
 
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center">
@@ -46,14 +75,14 @@ export default function CreditScreen({ onBack }) {
               <div className="bg-amber-100 rounded-lg p-1.5"><CreditCard size={14} className="text-amber-600" /></div>
             </div>
             <p className="text-amber-700 text-2xl font-extrabold">UGX {totalOwed.toLocaleString()}</p>
-            <p className="text-slate-400 text-xs mt-1">{CUSTOMERS.length} customers with debt</p>
+            <p className="text-slate-400 text-xs mt-1">{customers.length} customers with debt</p>
           </div>
 
           {/* Overdue note */}
           <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 flex items-center gap-2">
             <Clock size={14} className="text-red-400 shrink-0" />
             <p className="text-red-500 text-sm font-medium">
-              {CUSTOMERS.filter(c => c.overdue).length} customers have overdue payments
+              {customers.filter(c => c.overdue).length} customers have overdue payments
             </p>
           </div>
 
@@ -70,7 +99,7 @@ export default function CreditScreen({ onBack }) {
 
           {/* Customer cards */}
           <div className="flex flex-col gap-2.5">
-            {CUSTOMERS.map(c => (
+            {customers.map(c => (
               <button
                 key={c.id}
                 onClick={() => setSelected(c)}
@@ -157,10 +186,19 @@ export default function CreditScreen({ onBack }) {
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Record Payment (UGX)</label>
                   <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 h-[48px] focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
-                    <input type="number" placeholder="Enter amount paid" className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-300 outline-none" />
+                    <input
+                      type="number"
+                      placeholder="Enter amount paid"
+                      value={paymentAmount}
+                      onChange={e => setPaymentAmount(e.target.value)}
+                      className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-300 outline-none"
+                    />
                   </div>
                 </div>
-                <button className="w-full h-[52px] bg-gradient-to-r from-emerald-400 to-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-100 active:scale-95 transition-all">
+                <button
+                  onClick={handlePayment}
+                  className="w-full h-[52px] bg-gradient-to-r from-emerald-400 to-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-100 active:scale-95 transition-all"
+                >
                   Record Payment
                 </button>
               </div>
