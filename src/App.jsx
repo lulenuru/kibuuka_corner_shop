@@ -1,5 +1,6 @@
 import { useState } from "react";
 import LoginScreen    from "./screens/login";
+import SignupScreen   from "./screens/signup";
 import HomeScreen     from "./screens/home";
 import SalesScreen    from "./screens/sales";
 import InventoryScreen from "./screens/inventory";
@@ -12,10 +13,15 @@ import KaMoneyScreen from "./screens/ka_money";
 
 export default function App() {
   const [auth,   setAuth]   = useState(false);
+  const [isSignup, setIsSignup] = useState(false);
   const [screen, setScreen] = useState("home");
 
   if (!auth) {
-    return <LoginScreen onLogin={() => setAuth(true)} />;
+    if (isSignup) {
+      return <SignupScreen onSignup={() => setAuth(true)} onSwitchToLogin={() => setIsSignup(false)} />;
+    } else {
+      return <LoginScreen onLogin={() => setAuth(true)} onSwitchToSignup={() => setIsSignup(true)} />;
+    }
   }
 
   const goBack   = () => setScreen("home");

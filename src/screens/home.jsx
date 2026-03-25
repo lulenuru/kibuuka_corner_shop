@@ -43,7 +43,7 @@ export default function HomeScreen({ onNavigate, onLogout }) {
                   <Bell size={17} />
                   <span className="absolute top-2 right-2 w-2 h-2 bg-amber-400 rounded-full border-2 border-blue-900" />
                 </button>
-                <button onClick={onLogout} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/20 transition-colors">
+                <button onClick={onLogout} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white hover:bg-red-500 hover:border-red-600 active:bg-red-600 active:border-red-700 transition-all">
                   <LogOut size={16} />
                 </button>
               </div>

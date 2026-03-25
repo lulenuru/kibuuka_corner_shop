@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, Store, Shield, Zap, CheckCircle, Lock } from "lucide-react";
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin, onSwitchToSignup }) {
   const [phone, setPhone] = useState("");
   const [pass, setPass]   = useState("");
   const [show, setShow]   = useState(false);
@@ -34,7 +34,7 @@ export default function LoginScreen({ onLogin }) {
             Welcome back
           </h1>
           <p className="relative z-10 text-slate-400 text-sm leading-relaxed mb-6">
-            Sign in to manage your Kaduuka
+            Login to manage your Kaduuka
           </p>
 
           {/* trust badges */}
@@ -55,7 +55,7 @@ export default function LoginScreen({ onLogin }) {
         {/* ── Form card ── */}
         <div className="flex-1 bg-white rounded-t-3xl px-6 pt-8 pb-10 flex flex-col gap-6">
           <div>
-            <h2 className="text-slate-800 text-xl font-extrabold">Sign In</h2>
+            <h2 className="text-slate-800 text-xl font-extrabold">Login</h2>
             <p className="text-slate-400 text-sm mt-1">Enter your credentials to continue</p>
           </div>
 
@@ -112,12 +112,21 @@ export default function LoginScreen({ onLogin }) {
             disabled={loading}
             className="w-full h-[52px] bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 active:scale-95 text-white font-bold text-base rounded-2xl shadow-lg shadow-emerald-200 transition-all disabled:opacity-75"
           >
-            {loading ? "Signing in…" : "Sign In →"}
+            {loading ? "Logging in…" : "Login →"}
           </button>
 
           <div className="text-center">
             <button className="text-emerald-500 text-sm font-bold hover:text-emerald-600 transition-colors">
               Forgot password?
+            </button>
+          </div>
+
+          <div className="text-center">
+            <button
+              onClick={onSwitchToSignup}
+              className="text-slate-500 text-sm font-medium hover:text-emerald-500 transition-colors"
+            >
+              Don't have an account? Sign up
             </button>
           </div>
 
