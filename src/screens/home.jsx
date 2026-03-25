@@ -1,7 +1,8 @@
+import { useState } from "react";
 import {
   ShoppingCart, Package, CreditCard, BarChart2,
   UserCheck, TrendingUp, Bell, LogOut, User,
-  ChevronRight, AlertTriangle, DollarSign, PiggyBank,
+  ChevronRight, AlertTriangle, DollarSign, PiggyBank, X,
 } from "lucide-react";
 
 const FEATURES = [
@@ -23,6 +24,55 @@ const LOW_STOCK = [
 ];
 
 export default function HomeScreen({ onNavigate, onLogout }) {
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Check if today's inputs have been recorded
+  const getTodayReminders = () => {
+    try {
+      const today = new Date().toLocaleDateString();
+      
+      let transactions = {};
+      try {
+        const txnData = localStorage.getItem("transactions_v1");
+        if (txnData && txnData.trim()) {
+          transactions = JSON.parse(txnData);
+        }
+      } catch (e) {
+        transactions = {};
+      }
+      
+      let expenses = [];
+      try {
+        const expData = localStorage.getItem("expenses_v1");
+        if (expData && expData.trim()) {
+          expenses = JSON.parse(expData);
+        }
+      } catch (e) {
+        expenses = [];
+      }
+      
+      const todayTransactions = Object.values(transactions).flat().filter(t => t?.date === today);
+      const todayExpenses = expenses.filter(e => e?.date === today);
+      
+      const reminders = [];
+      
+      if (todayTransactions.length === 0) {
+        reminders.push("📝 No sales recorded today");
+      }
+      if (todayExpenses.length === 0) {
+        reminders.push("💰 No expenses recorded today");
+      }
+      
+      return reminders;
+    } catch (e) {
+      console.error("Error in getTodayReminders:", e);
+      return [];
+    }
+  };
+
+  const reminders = getTodayReminders();
+  const hasReminders = reminders.length > 0;
+
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center">
       <div className="w-full max-w-sm flex flex-col shadow-2xl bg-slate-50 min-h-screen">
@@ -40,9 +90,12 @@ export default function HomeScreen({ onNavigate, onLogout }) {
                 <h1 className="text-white text-xl font-extrabold mt-1">Kibuuka</h1>
               </div>
               <div className="flex gap-2">
-                <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/20 transition-all"
+                >
                   <Bell size={17} />
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-amber-400 rounded-full border-2 border-blue-900" />
+                  {hasReminders && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-blue-900" />}
                 </button>
                 <button onClick={onLogout} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white hover:bg-red-500 hover:border-red-600 active:bg-red-600 active:border-red-700 transition-all">
                   <LogOut size={16} />
@@ -126,6 +179,61 @@ export default function HomeScreen({ onNavigate, onLogout }) {
 
         </div>
       </div>
+
+      {/* Notifications Modal */}
+      {showNotifications && (
+        <>
+          <div 
+            onClick={() => setShowNotifications(false)} 
+            className="fixed inset-0 z-40" 
+          />
+          <div className="fixed top-20 right-4 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-100">
+              <h3 className="text-slate-800 font-bold text-sm">Today's Reminders</h3>
+              <button 
+                onClick={() => setShowNotifications(false)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                <X size={14} className="text-slate-500" />
+              </button>
+            </div>
+            
+            <div className="p-4 flex flex-col gap-2">
+              {hasReminders ? (
+                reminders.map((reminder, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <span className="text-lg mt-0.5">{reminder.split(" ")[0]}</span>
+                    <span className="text-sm text-amber-900 font-medium">{reminder.split(" ").slice(1).join(" ")}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center justify-center py-6 text-center">
+                  <p className="text-sm text-slate-500">✅ All set for today!</p>
+                </div>
+              )}
+            </div>
+
+            {hasReminders && (
+              <div className="px-4 py-3 border-t border-slate-100 bg-slate-50">
+                <button 
+                  onClick={() => {
+                    const firstReminder = reminders[0];
+                    if (firstReminder.includes("sales")) {
+                      onNavigate("sales");
+                    } else if (firstReminder.includes("expenses")) {
+                      onNavigate("expenses");
+                    }
+                    setShowNotifications(false);
+                  }}
+                  className="w-full py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors"
+                >
+                  Record Now
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
