@@ -1,6 +1,6 @@
 import {
   ShoppingCart, Package, CreditCard, BarChart2,
-  UserCheck, TrendingUp, Bell, LogOut,
+  UserCheck, TrendingUp, Bell, LogOut, User,
   ChevronRight, AlertTriangle, DollarSign, PiggyBank,
 } from "lucide-react";
 
@@ -9,6 +9,7 @@ const FEATURES = [
   { key: "expenses",  icon: DollarSign,   label: "Record Expense",  sub: "Track costs like restock, transport", iconColor: "text-purple-500", iconBg: "bg-purple-50", badge: "Add now" },
   { key: "inventory", icon: Package,      label: "Inventory",       sub: "Track stock levels",        iconColor: "text-blue-500",    iconBg: "bg-blue-50",     badge: "3 low stock"     },
   { key: "credit",    icon: CreditCard,   label: "Credit",          sub: "Customer debt tracking",    iconColor: "text-amber-500",   iconBg: "bg-amber-50",    badge: "UGX 187K owed"   },
+  { key: "clients",   icon: User,         label: "Clients",         sub: "Manage trusted customers",  iconColor: "text-pink-500",    iconBg: "bg-pink-50",     badge: "1 client"        },
   { key: "ka_money",  icon: PiggyBank,    label: "Ka Money",        sub: "Earn UGX 500 per MM txn",   iconColor: "text-purple-500", iconBg: "bg-purple-50", badge: "Redeem after 10" },
   { key: "reports",   icon: BarChart2,    label: "Reports",         sub: "Sales & performance",       iconColor: "text-slate-600",   iconBg: "bg-slate-100",   badge: "View insights"   },
   { key: "restock",   icon: TrendingUp,   label: "Restock History", sub: "Past stock additions",      iconColor: "text-teal-500",    iconBg: "bg-teal-50",     badge: "2 days ago"      },

@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft, Plus, Minus, Trash2, Search,
-  X, Banknote, Smartphone, CreditCard, CheckCircle, Bell,
+  X, Banknote, Smartphone, CreditCard, CheckCircle, Bell, ChevronDown, User,
 } from "lucide-react";
+
+const CLIENTS_STORAGE_KEY = "clients_v1";
+const KA_MONEY_STORAGE_KEY = "kaMoneyState_v1";
+const REWARD_PER_TXN = 500;
 
 const PRODUCTS = [
   { id: 1, name: "Cooking Oil 2L", category: "Groceries", price: 14000, stock: 24 },
@@ -19,11 +23,42 @@ const PAY_METHODS = [
 ];
 
 export default function SalesScreen({ onBack }) {
-  const [cart, setCart]       = useState([]);
-  const [payment, setPayment] = useState("cash");
-  const [modal, setModal]     = useState(false);
-  const [search, setSearch]   = useState("");
-  const [success, setSuccess] = useState(false);
+  const [cart, setCart]              = useState([]);
+  const [payment, setPayment]        = useState("cash");
+  const [modal, setModal]            = useState(false);
+  const [search, setSearch]          = useState("");
+  const [success, setSuccess]        = useState(false);
+  const [clientType, setClientType]  = useState("general"); // "general" or clientId
+  const [clients, setClients]        = useState([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(CLIENTS_STORAGE_KEY)) ?? [];
+      setClients(stored);
+    } catch {
+      setClients([]);
+    }
+  }, []);
+
+  const addToKaMoney = (selectedClientId) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem(KA_MONEY_STORAGE_KEY)) ?? {};
+      const clientKey = `client_${selectedClientId}`;
+      const clientData = existing[clientKey] ?? { txns: [], redeemed: false };
+      
+      clientData.txns = [
+        { id: Date.now(), date: new Date().toLocaleDateString(), amount: total, type: "MM" },
+        ...(clientData.txns ?? [])
+      ];
+      clientData.redeemed = false;
+      
+      existing[clientKey] = clientData;
+      localStorage.setItem(KA_MONEY_STORAGE_KEY, JSON.stringify(existing));
+    } catch (e) {
+      console.error("Failed to save ka money:", e);
+    }
+  };
 
   const addToCart = (p) => {
     setCart(c => c.find(i => i.id === p.id)
@@ -42,6 +77,10 @@ export default function SalesScreen({ onBack }) {
   const payLabel = PAY_METHODS.find(m => m.key === payment)?.label;
 
   /* ── Success screen ── */
+  const selectedClient = clients.find(c => c.id === parseInt(clientType));
+  const successMsg = selectedClient ? `${selectedClient.name}` : "General Customer";
+  const kaMoneyAdded = payment === "momo" && selectedClient;
+
   if (success) return (
     <div className="min-h-screen bg-slate-100 flex justify-center">
       <div className="w-full max-w-sm bg-slate-50 flex flex-col items-center justify-center gap-5 px-8 shadow-2xl min-h-screen">
@@ -50,9 +89,17 @@ export default function SalesScreen({ onBack }) {
         </div>
         <h2 className="text-slate-800 text-2xl font-extrabold text-center">Sale Complete!</h2>
         <p className="text-emerald-500 text-3xl font-extrabold">UGX {total.toLocaleString()}</p>
-        <p className="text-slate-400 text-sm">Payment via {payLabel}</p>
+        <div className="text-center">
+          <p className="text-slate-400 text-sm">Payment via {payLabel}</p>
+          <p className="text-slate-600 text-sm font-medium mt-1">Customer: {successMsg}</p>
+          {kaMoneyAdded && (
+            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-600 text-xs font-bold">✓ Ka Money +UGX {REWARD_PER_TXN} added to {selectedClient.name}</p>
+            </div>
+          )}
+        </div>
         <button
-          onClick={() => { setCart([]); setSuccess(false); }}
+          onClick={() => { setCart([]); setSuccess(false); setClientType("general"); }}
           className="mt-2 w-56 h-[52px] bg-gradient-to-r from-emerald-400 to-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-100 active:scale-95 transition-all"
         >
           New Sale
@@ -86,6 +133,54 @@ export default function SalesScreen({ onBack }) {
 
         {/* ── Body ── */}
         <div className="flex-1 overflow-y-auto px-4 pt-4 pb-32 flex flex-col gap-4" style={{ scrollbarWidth: "none" }}>
+
+          {/* Client selector */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Selling To</p>
+            <div className="relative">
+              <button
+                onClick={() => setShowClientDropdown(!showClientDropdown)}
+                className="w-full flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 hover:border-emerald-300 transition-all text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <User size={16} className={clientType === "general" ? "text-slate-400" : "text-blue-500"} />
+                  <span className="text-sm font-medium text-slate-700">
+                    {clientType === "general" ? "General Customer" : selectedClient?.name ?? "Select Client"}
+                  </span>
+                </div>
+                <ChevronDown size={16} className="text-slate-400" />
+              </button>
+
+              {showClientDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg z-40">
+                  <button
+                    onClick={() => { setClientType("general"); setShowClientDropdown(false); }}
+                    className={`w-full text-left px-4 py-3 text-sm font-medium border-b border-slate-100 hover:bg-slate-50 transition-colors ${clientType === "general" ? "bg-emerald-50 text-emerald-600" : "text-slate-700"}`}
+                  >
+                    General Customer (One-time)
+                  </button>
+                  {clients.length > 0 && (
+                    <>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 pt-2">Trusted Clients</p>
+                      {clients.map(client => (
+                        <button
+                          key={client.id}
+                          onClick={() => { setClientType(client.id); setShowClientDropdown(false); }}
+                          className={`w-full text-left px-4 py-3 text-sm border-b border-slate-100 hover:bg-slate-50 transition-colors ${clientType === client.id ? "bg-blue-50" : ""}`}
+                        >
+                          <p className="font-medium text-slate-700">{client.name}</p>
+                          <p className="text-xs text-slate-400">{client.phone}</p>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {clients.length === 0 && (
+                    <p className="text-xs text-slate-400 px-4 py-2">No saved clients. Go to Clients to add.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Add product */}
           <button
@@ -156,7 +251,12 @@ export default function SalesScreen({ onBack }) {
           {/* Checkout */}
           {cart.length > 0 && (
             <button
-              onClick={() => setSuccess(true)}
+              onClick={() => {
+                if (payment === "momo" && clientType !== "general") {
+                  addToKaMoney(parseInt(clientType));
+                }
+                setSuccess(true);
+              }}
               className="w-full h-[52px] bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-base rounded-2xl shadow-lg shadow-emerald-100 active:scale-95 transition-all"
             >
               Complete Sale · UGX {total.toLocaleString()}
