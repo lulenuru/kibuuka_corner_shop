@@ -6,6 +6,8 @@ import {
 
 const CLIENTS_STORAGE_KEY = "clients_v1";
 const KA_MONEY_STORAGE_KEY = "kaMoneyState_v1";
+const TRANSACTIONS_STORAGE_KEY = "transactions_v1";
+const CREDIT_STORAGE_KEY = "credit_v1";
 const REWARD_PER_TXN = 500;
 
 const PRODUCTS = [
@@ -60,6 +62,55 @@ export default function SalesScreen({ onBack }) {
     }
   };
 
+  const saveTransaction = (clientId, clientName, amount, paymentMethod) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) ?? {};
+      const txnList = existing[clientId] ?? { name: clientName, transactions: [] };
+      
+      txnList.transactions = [
+        {
+          id: Date.now(),
+          date: new Date().toLocaleDateString(),
+          time: new Date().toLocaleTimeString(),
+          amount,
+          method: paymentMethod,
+          methodLabel: PAY_METHODS.find(m => m.key === paymentMethod)?.label || paymentMethod,
+        },
+        ...(txnList.transactions ?? [])
+      ];
+      
+      existing[clientId] = txnList;
+      localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(existing));
+    } catch (e) {
+      console.error("Failed to save transaction:", e);
+    }
+  };
+
+  const addCredit = (clientId, clientName, amount) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem(CREDIT_STORAGE_KEY)) ?? {};
+      const clientCredit = existing[clientId] ?? { name: clientName, balance: 0, transactions: [] };
+      
+      clientCredit.balance += amount;
+      clientCredit.transactions = [
+        {
+          id: Date.now(),
+          date: new Date().toLocaleDateString(),
+          time: new Date().toLocaleTimeString(),
+          amount,
+          type: "sale",
+          description: "Credit sale",
+        },
+        ...(clientCredit.transactions ?? [])
+      ];
+      
+      existing[clientId] = clientCredit;
+      localStorage.setItem(CREDIT_STORAGE_KEY, JSON.stringify(existing));
+    } catch (e) {
+      console.error("Failed to save credit:", e);
+    }
+  };
+
   const addToCart = (p) => {
     setCart(c => c.find(i => i.id === p.id)
       ? c.map(i => i.id === p.id ? { ...i, qty: i.qty + 1 } : i)
@@ -80,6 +131,7 @@ export default function SalesScreen({ onBack }) {
   const selectedClient = clients.find(c => c.id === parseInt(clientType));
   const successMsg = selectedClient ? `${selectedClient.name}` : "General Customer";
   const kaMoneyAdded = payment === "momo" && selectedClient;
+  const creditAdded = payment === "credit" && selectedClient;
 
   if (success) return (
     <div className="min-h-screen bg-slate-100 flex justify-center">
@@ -95,6 +147,11 @@ export default function SalesScreen({ onBack }) {
           {kaMoneyAdded && (
             <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-600 text-xs font-bold">✓ Ka Money +UGX {REWARD_PER_TXN} added to {selectedClient.name}</p>
+            </div>
+          )}
+          {creditAdded && (
+            <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-amber-600 text-xs font-bold">✓ Credit balance +UGX {total.toLocaleString()} for {selectedClient.name}</p>
             </div>
           )}
         </div>
@@ -252,8 +309,14 @@ export default function SalesScreen({ onBack }) {
           {cart.length > 0 && (
             <button
               onClick={() => {
-                if (payment === "momo" && clientType !== "general") {
-                  addToKaMoney(parseInt(clientType));
+                if (clientType !== "general") {
+                  const clientId = parseInt(clientType);
+                  saveTransaction(clientId, selectedClient?.name, total, payment);
+                  if (payment === "momo") {
+                    addToKaMoney(clientId);
+                  } else if (payment === "credit") {
+                    addCredit(clientId, selectedClient?.name, total);
+                  }
                 }
                 setSuccess(true);
               }}

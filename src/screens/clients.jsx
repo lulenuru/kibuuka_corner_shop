@@ -1,22 +1,71 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, X, Phone, Trash2, User, Edit2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Phone, Trash2, Edit2, TrendingUp } from "lucide-react";
+import { Banknote, Smartphone, CreditCard } from "lucide-react";
 
-const STORAGE_KEY = "clients_v1";
+const CLIENTS_STORAGE_KEY = "clients_v1";
+const TRANSACTIONS_STORAGE_KEY = "transactions_v1";
 
-function loadClients() {
+function loadAllClientsData() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? [];
+    const saved = JSON.parse(localStorage.getItem(CLIENTS_STORAGE_KEY)) ?? [];
+    const txns = JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) ?? {};
+    
+    // Combine saved clients with transaction data
+    const allClients = {};
+    
+    // Add saved clients
+    saved.forEach(client => {
+      allClients[client.id] = {
+        id: client.id,
+        name: client.name,
+        phone: client.phone,
+        isSaved: true,
+        transactions: txns[client.id]?.transactions ?? [],
+      };
+    });
+    
+    // Add clients from transactions (even if not manually saved)
+    Object.entries(txns).forEach(([clientId, data]) => {
+      const cid = parseInt(clientId);
+      if (!allClients[cid]) {
+        allClients[cid] = {
+          id: cid,
+          name: data.name,
+          phone: "N/A",
+          isSaved: false,
+          transactions: data.transactions ?? [],
+        };
+      } else {
+        allClients[cid].transactions = data.transactions ?? [];
+      }
+    });
+    
+    return Object.values(allClients).sort((a, b) => {
+      const aLatest = a.transactions[0]?.date || "";
+      const bLatest = b.transactions[0]?.date || "";
+      return aLatest > bLatest ? -1 : 1;
+    });
   } catch {
     return [];
   }
 }
 
-function saveClients(clients) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
-}
+const paymentMethodIcon = (method) => {
+  switch(method) {
+    case "cash":
+      return <Banknote size={14} className="text-emerald-500" />;
+    case "momo":
+      return <Smartphone size={14} className="text-blue-500" />;
+    case "credit":
+      return <CreditCard size={14} className="text-amber-500" />;
+    default:
+      return null;
+  }
+};
 
 export default function ClientsScreen({ onBack }) {
-  const [clients, setClients] = useState([]);
+  const [allClients, setAllClients] = useState([]);
+  const [expandedClientId, setExpandedClientId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -24,12 +73,12 @@ export default function ClientsScreen({ onBack }) {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    setClients(loadClients());
+    refreshClients();
   }, []);
 
-  useEffect(() => {
-    saveClients(clients);
-  }, [clients]);
+  const refreshClients = () => {
+    setAllClients(loadAllClientsData());
+  };
 
   const handleSave = () => {
     if (!name.trim() || !phone.trim()) {
@@ -37,20 +86,26 @@ export default function ClientsScreen({ onBack }) {
       return;
     }
 
-    setErr("");
-    
-    if (editId) {
-      // Edit existing
-      setClients(clients.map(c => c.id === editId ? { ...c, name, phone } : c));
-      setEditId(null);
-    } else {
-      // Add new
-      setClients([...clients, { id: Date.now(), name, phone, createdAt: new Date().toISOString() }]);
+    try {
+      const saved = JSON.parse(localStorage.getItem(CLIENTS_STORAGE_KEY)) ?? [];
+      setErr("");
+
+      if (editId) {
+        const updated = saved.map(c => c.id === editId ? { ...c, name, phone } : c);
+        localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(updated));
+        setEditId(null);
+      } else {
+        const newClient = { id: Date.now(), name, phone, createdAt: new Date().toISOString() };
+        localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify([...saved, newClient]));
+      }
+
+      setName("");
+      setPhone("");
+      setShowModal(false);
+      refreshClients();
+    } catch (e) {
+      setErr("Failed to save client");
     }
-    
-    setName("");
-    setPhone("");
-    setShowModal(false);
   };
 
   const handleEdit = (client) => {
@@ -60,8 +115,15 @@ export default function ClientsScreen({ onBack }) {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
-    setClients(clients.filter(c => c.id !== id));
+  const handleDelete = (clientId) => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CLIENTS_STORAGE_KEY)) ?? [];
+      const updated = saved.filter(c => c.id !== clientId);
+      localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(updated));
+      refreshClients();
+    } catch (e) {
+      console.error("Failed to delete client:", e);
+    }
   };
 
   const handleCancel = () => {
@@ -70,6 +132,10 @@ export default function ClientsScreen({ onBack }) {
     setEditId(null);
     setErr("");
     setShowModal(false);
+  };
+
+  const totalSpent = (client) => {
+    return client.transactions.reduce((sum, txn) => sum + (txn.amount || 0), 0);
   };
 
   return (
@@ -86,10 +152,7 @@ export default function ClientsScreen({ onBack }) {
               </button>
               <div>
                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Clients</p>
-                <h1 className="text-white text-xl font-extrabold mt-0.5 flex items-center gap-2">
-                  <User size={18} />
-                  Trusted Clients
-                </h1>
+                <h1 className="text-white text-xl font-extrabold mt-0.5">All Customers</h1>
               </div>
             </div>
             <button
@@ -103,38 +166,96 @@ export default function ClientsScreen({ onBack }) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-4 pt-4 pb-10" style={{ scrollbarWidth: "none" }}>
-          {clients.length === 0 ? (
+          {allClients.length === 0 ? (
             <div className="text-center mt-10">
               <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                <User size={28} className="text-slate-300" />
+                <TrendingUp size={28} className="text-slate-300" />
               </div>
-              <p className="text-slate-500 text-sm font-medium mb-1">No clients yet</p>
-              <p className="text-slate-400 text-xs max-w-xs mx-auto">Add your trusted customers to enable Ka Money savings</p>
+              <p className="text-slate-500 text-sm font-medium mb-1">No customers yet</p>
+              <p className="text-slate-400 text-xs max-w-xs mx-auto">Customers will appear here as you record sales</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {clients.map(client => (
-                <div key={client.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-slate-800 font-semibold">{client.name}</p>
-                    <p className="text-slate-400 text-sm flex items-center gap-1 mt-1">
-                      <Phone size={12} /> {client.phone}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(client)}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(client.id)}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+            <div className="space-y-3">
+              {allClients.map(client => (
+                <div key={client.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                  {/* Client header */}
+                  <button
+                    onClick={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)}
+                    className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-slate-800 font-semibold truncate">{client.name}</p>
+                        {client.isSaved && (
+                          <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-600 text-xs font-bold rounded">Saved</span>
+                        )}
+                      </div>
+                      <p className="text-slate-400 text-sm flex items-center gap-1 mt-1">
+                        <Phone size={12} /> {client.phone}
+                      </p>
+                    </div>
+                    <div className="text-right mr-3">
+                      <p className="text-emerald-500 font-bold">{client.transactions.length}</p>
+                      <p className="text-slate-400 text-xs">purchases</p>
+                    </div>
+                  </button>
+
+                  {/* Expanded transactions */}
+                  {expandedClientId === client.id && (
+                    <div className="border-t border-slate-200 bg-slate-50">
+                      {/* Stats */}
+                      <div className="px-4 py-3 flex gap-2">
+                        <div className="flex-1 bg-white rounded-lg p-2 text-center">
+                          <p className="text-xs text-slate-400">Total Spent</p>
+                          <p className="text-sm font-bold text-emerald-600">UGX {totalSpent(client).toLocaleString()}</p>
+                        </div>
+                        <div className="flex-1 bg-white rounded-lg p-2 text-center">
+                          <p className="text-xs text-slate-400">Transactions</p>
+                          <p className="text-sm font-bold text-slate-700">{client.transactions.length}</p>
+                        </div>
+                      </div>
+
+                      {/* Transactions */}
+                      {client.transactions.length > 0 ? (
+                        <div className="px-4 pb-3 space-y-2 max-h-60 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+                          {client.transactions.map(txn => (
+                            <div key={txn.id} className="bg-white rounded-lg p-2.5 text-sm border border-slate-100">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  {paymentMethodIcon(txn.method)}
+                                  <span className="text-xs font-medium text-slate-600">{txn.methodLabel}</span>
+                                </div>
+                                <span className="font-bold text-slate-700">UGX {txn.amount.toLocaleString()}</span>
+                              </div>
+                              <p className="text-xs text-slate-400 mt-1">
+                                {txn.date} {txn.time && `• ${txn.time}`}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="px-4 pb-3 text-xs text-slate-400">No transactions</p>
+                      )}
+
+                      {/* Actions */}
+                      {client.isSaved && (
+                        <div className="px-4 pb-3 flex gap-2">
+                          <button
+                            onClick={() => handleEdit(client)}
+                            className="flex-1 px-2 py-2 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold hover:bg-blue-100 transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Edit2 size={12} /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(client.id)}
+                            className="flex-1 px-2 py-2 rounded-lg bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Trash2 size={12} /> Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
