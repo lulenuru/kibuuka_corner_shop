@@ -11,6 +11,7 @@ import StaffScreen    from "./screens/staff";
 import RestockHistoryScreen from "./screens/restock_history";
 import KaMoneyScreen from "./screens/ka_money";
 import ClientsScreen from "./screens/clients";
+import SmartLifeFlexiScreen from "./screens/smartlife_flexi";
 
 export default function App() {
   const [auth,   setAuth]   = useState(false);
@@ -38,6 +39,7 @@ export default function App() {
     case "expenses":  return <ExpensesScreen  onBack={goBack} />;
     case "staff":     return <StaffScreen     onBack={goBack} />;
     case "ka_money":  return <KaMoneyScreen   onBack={goBack} />;
+    case "smartlife": return <SmartLifeFlexiScreen onBack={goBack} />;
     case "restock":   return <RestockHistoryScreen onBack={goBack} />;
     case "clients":   return <ClientsScreen   onBack={goBack} />;
     default:          return <HomeScreen      onNavigate={navigate} onLogout={() => setAuth(false)} />;
